@@ -1,15 +1,16 @@
-using LiteNetLib.Utils;
 using LiteNetLib;
+using LiteNetLib.Utils;
 using LoggerEngine;
+using Mirror;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Net.Sockets;
+using System.Diagnostics.Contracts;
 using System.Net;
+using System.Net.Sockets;
 using UnityEngine;
 using UnityEngine.Events;
-using System.Diagnostics.Contracts;
-using Mirror;
 
 namespace Shared.Network 
 {
@@ -18,14 +19,13 @@ namespace Shared.Network
     {
         [SerializeField] private NetManager _client;
         [SerializeField] private NetPeer _serverPeer;
+
         public bool connected = false;
 
         public void Connect(string address, int port)
         {
             _client = new NetManager(this);
             _client.Start();
-
-
 
             _serverPeer = _client.Connect(address, port, "ClaveDeConexion");
             if (_serverPeer != null)
@@ -91,7 +91,6 @@ namespace Shared.Network
         {
             string mensaje = reader.GetString();
             DebugServer.Log($"Mensaje recibido del servidor: {mensaje}", ConsoleColor.DarkYellow);
-
             OnDataReceive?.Invoke(mensaje);
         }
 
@@ -108,6 +107,7 @@ namespace Shared.Network
     {
         public enum MasterServerOperation 
         {
+            None,
             Create, 
             CreateJoin,
             Join,
@@ -143,7 +143,7 @@ namespace Shared.Network
 
     public class ServerCom : MonoBehaviour
     {
-        private Client client;
+        public Client client;
 
         private void Awake()
         {
@@ -160,6 +160,8 @@ namespace Shared.Network
                 client.Update();
             }
         }
+
+       
 
         public void AddServer() 
         {

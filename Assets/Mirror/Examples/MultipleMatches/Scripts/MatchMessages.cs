@@ -8,6 +8,7 @@ namespace Mirror.Examples.MultipleMatch
     public struct ServerMatchMessage : NetworkMessage
     {
         public ServerMatchOperation serverMatchOperation;
+        public string type;
         public Guid matchId;
         public int userId;
     }

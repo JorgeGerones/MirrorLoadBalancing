@@ -1,4 +1,5 @@
 using LoggerEngine;
+using Newtonsoft.Json;
 using Shared.Network;
 using System;
 using System.Collections;
@@ -237,11 +238,34 @@ namespace Mirror.Examples.MultipleMatch
             InitializeData();
             NetworkServer.RegisterHandler<ServerMatchMessage>(OnServerMatchMessage);
 
-            
+            serverCom.client.OnDataReceive.AddListener(OnDataReceive);
 
             serverCom.AddServer();
         }
 
+        private void OnDataReceive(string msg)
+        {
+            var masterMessage = JsonConvert.DeserializeObject<MasterServerMessage>(msg);
+
+            Console.WriteLine(masterMessage.operation);
+            Console.WriteLine(masterMessage.matchId);
+            Console.WriteLine(masterMessage.type);
+
+            switch (masterMessage.operation)
+            {
+                case MasterServerMessage.MasterServerOperation.Create:
+                    OnServerMatchMessage(masterMessage);
+                    break;
+                case MasterServerMessage.MasterServerOperation.CreateJoin:
+                    break;
+                case MasterServerMessage.MasterServerOperation.Join:
+                    break;
+                case MasterServerMessage.MasterServerOperation.Leave:
+                    break;
+                case MasterServerMessage.MasterServerOperation.Cancel:
+                    break;
+            }
+        }
         [ServerCallback]
         internal void OnServerReady(NetworkConnectionToClient conn)
         {
@@ -375,6 +399,40 @@ namespace Mirror.Examples.MultipleMatch
                     }
             }
         }
+        [ServerCallback]
+        void OnServerMatchMessage(MasterServerMessage msg)
+        {
+            switch (msg.operation)
+            {
+                case MasterServerMessage.MasterServerOperation.None:
+                    {
+                        Debug.LogWarning("Missing ServerMatchOperation");
+                        break;
+                    }
+                case MasterServerMessage.MasterServerOperation.Create:
+                    {
+                        OnServerCreateMatch(msg);
+                        break;
+                    }
+                //case MasterServerMessage.MasterServerOperation.Cancel:
+                //    {
+                //        OnServerCancelMatch();
+                //        break;
+                //    }
+                //case MasterServerMessage.MasterServerOperation.Join:
+                //    {
+                //        OnServerJoinMatch(msg.matchId);
+                //        break;
+                //    }
+                //case MasterServerMessage.MasterServerOperation.Leave:
+                //    {
+                //        OnServerLeaveMatch(msg.matchId);
+                //        break;
+                //    }
+                default:
+                    break;
+            }
+        }
 
         [ServerCallback]
         void OnServerCreateMatch(NetworkConnectionToClient conn, ServerMatchMessage msg)
@@ -399,6 +457,18 @@ namespace Mirror.Examples.MultipleMatch
             PlayerInfo[] infos = matchConnections[newMatchId].Select(playerConn => playerInfos[playerConn]).ToArray();
 
             conn.Send(new ClientMatchMessage { clientMatchOperation = ClientMatchOperation.Created, matchId = newMatchId, playerInfos = infos });
+
+            SendMatchList();
+        }
+
+        [ServerCallback]
+        void OnServerCreateMatch(MasterServerMessage msg)
+        {
+            DebugServer.Log("Reveived Match");
+
+            Guid newMatchId = msg.matchId;
+            matchConnections.Add(newMatchId, new HashSet<NetworkConnectionToClient>());
+            openMatches.Add(newMatchId, new MatchInfo { matchId = newMatchId, maxPlayers = 2, players = 1 });
 
             SendMatchList();
         }

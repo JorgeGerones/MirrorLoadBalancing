@@ -3494,6 +3494,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4310daf4798e57943af7f3e560b0e92e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  client:
+    connected: 0
+    OnDataReceive:
+      m_PersistentCalls:
+        m_Calls: []
 --- !u!1 &2069254205
 GameObject:
   m_ObjectHideFlags: 0
